@@ -1,0 +1,62 @@
+
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║              Welcome to OpenCog WebVM                            ║
+║                                                                  ║
+║  A browser-based OpenCog development environment                ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+OpenCog is a framework for integrated Artificial General Intelligence,
+combining multiple AI paradigms in a unified architecture.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+QUICK START:
+
+  1. Start CogServer:
+     $ cogserver
+
+  2. Connect to CogServer (in new terminal or via Claude AI):
+     $ telnet localhost 17001
+     
+  3. Enter Scheme shell (once connected):
+     opencog> scm
+
+  4. Try basic Atomese:
+     guile> (use-modules (opencog))
+     guile> (ConceptNode "hello")
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HELPFUL COMMANDS:
+
+  ~/opencog-examples/opencog-start.sh    Interactive quick start
+  guile -l ~/opencog-examples/FILE.scm   Run example script
+  rlwrap telnet localhost 17001          Connect with history
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CLAUDE AI INTEGRATION:
+
+  Use the Claude AI panel (robot icon) to interact with OpenCog
+  using natural language. Claude can:
+  
+  • Translate your requests into Atomese
+  • Execute Scheme commands in CogServer
+  • Query the AtomSpace
+  • Explain OpenCog concepts
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RESOURCES:
+
+  Examples:  ~/opencog-examples/
+  Wiki:      https://wiki.opencog.org/
+  AtomSpace: https://wiki.opencog.org/w/AtomSpace
+  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Note: This WebVM runs in your browser using WebAssembly. Some
+operations may be slower than native execution.
+
