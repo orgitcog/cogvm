@@ -21,6 +21,15 @@ RUN apt-get clean && apt-get update && \
 
 WORKDIR /tmp/build
 
+# Clone and build CogUtil first (required dependency for AtomSpace)
+RUN git clone --depth 1 https://github.com/opencog/cogutil.git && \
+    cd cogutil && \
+    mkdir build && cd build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig
+
 # Clone and build atomspace with minimal features
 RUN git clone --depth 1 https://github.com/opencog/atomspace.git && \
     cd atomspace && \
@@ -66,7 +75,7 @@ RUN apt-get clean && apt-get update && \
 # Copy built binaries and libraries from builder
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
 COPY --from=builder /usr/local/lib/* /usr/local/lib/
-COPY --from=builder /usr/local/include/opencog /usr/local/include/opencog
+COPY --from=builder /usr/local/include/ /usr/local/include/
 COPY --from=builder /usr/local/share/guile /usr/local/share/guile
 
 # Run ldconfig
