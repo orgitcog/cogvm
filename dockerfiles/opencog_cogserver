@@ -79,7 +79,8 @@ RUN useradd -m user && echo "user:password" | chpasswd && \
 # Create OpenCog examples directory
 RUN mkdir -p /home/user/opencog-examples
 COPY --chown=user:user ./examples/opencog /home/user/opencog-examples/
-RUN chmod +x /home/user/opencog-examples/opencog-start.sh
+RUN chmod +x /home/user/opencog-examples/opencog-start.sh && \
+    chmod +x /home/user/opencog-examples/verify-installation.sh
 
 # Set up Guile configuration for user
 RUN mkdir -p /home/user/.config/guile/3.0 && \
