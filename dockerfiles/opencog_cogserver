@@ -1,0 +1,94 @@
+FROM --platform=i386 i386/debian:bookworm
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install core build tools and OpenCog dependencies
+RUN apt-get clean && apt-get update && apt-get -y upgrade && \
+    apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    libboost-dev \
+    libboost-filesystem-dev \
+    libboost-program-options-dev \
+    libboost-regex-dev \
+    libboost-system-dev \
+    libboost-thread-dev \
+    guile-3.0 \
+    guile-3.0-dev \
+    libgmp-dev \
+    libtool \
+    rlwrap \
+    telnet \
+    vim \
+    curl \
+    ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create user
+RUN useradd -m user && echo "user:password" | chpasswd
+RUN echo 'root:password' | chpasswd
+
+# Set working directory
+WORKDIR /tmp/build
+
+# Clone and build atomspace
+RUN git clone --depth 1 https://github.com/opencog/atomspace.git && \
+    cd atomspace && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    cd /tmp/build && \
+    rm -rf atomspace
+
+# Clone and build cogserver
+RUN git clone --depth 1 https://github.com/opencog/cogserver.git && \
+    cd cogserver && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    cd /tmp/build && \
+    rm -rf cogserver
+
+# Clean up build artifacts
+RUN rm -rf /tmp/build && \
+    apt-get purge -y \
+    build-essential \
+    cmake \
+    git && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create OpenCog examples directory
+RUN mkdir -p /home/user/opencog-examples
+COPY --chown=user:user ./examples/opencog /home/user/opencog-examples/
+
+# Set up Guile configuration for user
+RUN mkdir -p /home/user/.config/guile/3.0 && \
+    echo "(add-to-load-path \"/usr/local/share/guile/site/3.0\")" > /home/user/.guile && \
+    echo "(use-modules (ice-9 readline))" >> /home/user/.guile && \
+    echo "(activate-readline)" >> /home/user/.guile && \
+    chown -R user:user /home/user
+
+# Create startup script for cogserver
+RUN echo '#!/bin/bash' > /usr/local/bin/start-cogserver && \
+    echo 'echo "Starting OpenCog CogServer..."' >> /usr/local/bin/start-cogserver && \
+    echo 'echo "Connect via: telnet localhost 17001"' >> /usr/local/bin/start-cogserver && \
+    echo 'echo "Or use rlwrap for history: rlwrap telnet localhost 17001"' >> /usr/local/bin/start-cogserver && \
+    echo 'echo "Then type: scm  (to enter Scheme shell)"' >> /usr/local/bin/start-cogserver && \
+    echo 'echo ""' >> /usr/local/bin/start-cogserver && \
+    echo 'cogserver' >> /usr/local/bin/start-cogserver && \
+    chmod +x /usr/local/bin/start-cogserver
+
+WORKDIR /home/user
+ENV HOME="/home/user" TERM="xterm" USER="user" SHELL="/bin/bash" EDITOR="vim" LANG="en_US.UTF-8" LC_ALL="C"
+
+# Start bash by default (user can run start-cogserver or cogserver directly)
+CMD [ "/bin/bash" ]
