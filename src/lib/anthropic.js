@@ -44,7 +44,7 @@ async function sendMessages(handleTool)
 		var tool = dc ? { type: "computer_20250124", name: "computer", display_width_px: dc.width, display_height_px: dc.height, display_number: 1 } : { type: "bash_20250124", name: "bash" }
 		const config = {max_tokens: 2048,
 									messages: messages,
-									system: "You are running on a virtualized machine. Wait some extra time after all operations to compensate for slowdown.",
+									system: "You are running on a virtualized machine with OpenCog installed. Wait some extra time after all operations to compensate for slowdown.\n\nOpenCog Integration:\n- OpenCog cogserver is available via 'cogserver' command\n- Connect to cogserver with: telnet localhost 17001 or rlwrap telnet localhost 17001\n- Once connected, type 'scm' to enter the Scheme (Guile) shell for Atomese\n- Help users translate natural language into Atomese/Metta commands\n- Atomese is a hypergraph knowledge representation language\n- Basic Atomese syntax: (NodeType \"name\") for nodes, (LinkType node1 node2) for links\n- Common node types: ConceptNode, PredicateNode, VariableNode\n- Common link types: InheritanceLink, MemberLink, EvaluationLink, ListLink\n- Use (use-modules (opencog)) and (use-modules (opencog query)) in Scheme shell\n- Examples in /home/user/opencog-examples/",
 									model: 'claude-3-7-sonnet-20250219',
 									tools: [tool],
 									tool_choice: {type: "auto", disable_parallel_tool_use: true},

@@ -15,6 +15,7 @@ WebVM is powered by the CheerpX virtualization engine, and enables safe, sandbox
 
 ## Table of Contents
 
+- [OpenCog Integration](#opencog-integration)
 - [Fork, deploy, customize](#fork-deploy-customize)
 - [Running WebVM locally with a custom Debian mini disk image](#run-webvm-locally-with-a-custom-debian-mini-disk-image)
 - [Example customization: Python3 REPL](#example-customization-python3-repl)
@@ -28,6 +29,94 @@ WebVM is powered by the CheerpX virtualization engine, and enables safe, sandbox
 # Enable networking
 
 Modern browsers do not provide APIs to directly use TCP or UDP. WebVM provides networking support by integrating with Tailscale, a VPN network that supports WebSockets as a transport layer.
+
+# OpenCog Integration
+
+This WebVM distribution includes a functional OpenCog installation with CogServer, allowing you to work with Atomese and the AtomSpace hypergraph knowledge representation system.
+
+## Quick Start with OpenCog
+
+### Building the OpenCog Image
+
+To deploy WebVM with OpenCog:
+
+1. Use the `dockerfiles/opencog_cogserver` Dockerfile
+2. Set the workflow parameter `DOCKERFILE_PATH` to `dockerfiles/opencog_cogserver`
+3. The image size should be under 950M as required
+
+### Using OpenCog in WebVM
+
+Once deployed, you can:
+
+1. **Start the CogServer:**
+   ```bash
+   cogserver
+   ```
+   This starts the CogServer on port 17001 (telnet) and 18080 (websocket).
+
+2. **Connect to CogServer:**
+   ```bash
+   telnet localhost 17001
+   # or with command history:
+   rlwrap telnet localhost 17001
+   ```
+
+3. **Enter the Scheme Shell:**
+   Once connected, type `scm` to enter the Guile Scheme REPL where you can write Atomese.
+
+4. **Use the Quick Start Script:**
+   ```bash
+   ~/opencog-examples/opencog-start.sh
+   ```
+
+### Using Claude AI with OpenCog
+
+The Claude AI integration is enhanced to work with OpenCog. You can ask Claude to:
+
+- **Translate natural language to Atomese:** "Create an inheritance relationship between dog and animal"
+- **Execute Atomese code:** "Run this Scheme code: (ConceptNode 'cat')"
+- **Query the AtomSpace:** "Show me all concepts in the atomspace"
+- **Explain concepts:** "What is a ConceptNode?"
+
+Claude will automatically translate your natural language requests into appropriate Guile/Scheme commands for the cogserver.
+
+### Examples
+
+OpenCog examples are available in `~/opencog-examples/`:
+
+- `basic_atoms.scm` - Creating and querying nodes and links
+- `pattern_matching.scm` - Pattern matching and queries
+- `simple_kb.scm` - Simple knowledge base example
+- `README.md` - Comprehensive guide
+
+### Basic Atomese Example
+
+```scheme
+; Load modules
+(use-modules (opencog))
+(use-modules (opencog query))
+
+; Create concept nodes
+(ConceptNode "dog")
+(ConceptNode "animal")
+
+; Create an inheritance link
+(InheritanceLink
+    (ConceptNode "dog")
+    (ConceptNode "animal"))
+
+; Query the atomspace
+(cog-prt-atomspace)
+```
+
+### Resources
+
+- [OpenCog Wiki](https://wiki.opencog.org/)
+- [AtomSpace Documentation](https://wiki.opencog.org/w/AtomSpace)
+- [CogServer Documentation](https://github.com/opencog/cogserver)
+- Examples: See `~/opencog-examples/README.md` in the WebVM
+
+
 
 1.  Open the "Networking" panel from the side-bar
 2.  Click "Connect to Tailscale" from the panel

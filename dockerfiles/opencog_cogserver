@@ -1,0 +1,112 @@
+FROM --platform=i386 i386/debian:bookworm AS builder
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install build tools and dependencies
+RUN apt-get clean && apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    ca-certificates \
+    libboost-dev \
+    libboost-filesystem-dev \
+    libboost-program-options-dev \
+    libboost-regex-dev \
+    libboost-system-dev \
+    libboost-thread-dev \
+    guile-3.0-dev \
+    libgmp-dev \
+    libtool && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp/build
+
+# Clone and build atomspace with minimal features
+RUN git clone --depth 1 https://github.com/opencog/atomspace.git && \
+    cd atomspace && \
+    mkdir build && cd build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig
+
+# Clone and build cogserver
+RUN git clone --depth 1 https://github.com/opencog/cogserver.git && \
+    cd cogserver && \
+    mkdir build && cd build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig
+
+# Strip binaries to reduce size
+RUN strip --strip-unneeded /usr/local/bin/* /usr/local/lib/*.so* 2>/dev/null || true
+
+# Final stage - minimal runtime image
+FROM --platform=i386 i386/debian:bookworm
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install only runtime dependencies
+RUN apt-get clean && apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libboost-filesystem1.74.0 \
+    libboost-program-options1.74.0 \
+    libboost-regex1.74.0 \
+    libboost-system1.74.0 \
+    libboost-thread1.74.0 \
+    guile-3.0 \
+    libgmp10 \
+    rlwrap \
+    telnet \
+    vim-tiny \
+    bash && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy built binaries and libraries from builder
+COPY --from=builder /usr/local/bin/* /usr/local/bin/
+COPY --from=builder /usr/local/lib/* /usr/local/lib/
+COPY --from=builder /usr/local/include/opencog /usr/local/include/opencog
+COPY --from=builder /usr/local/share/guile /usr/local/share/guile
+
+# Run ldconfig
+RUN ldconfig
+
+# Create user
+RUN useradd -m user && echo "user:password" | chpasswd && \
+    echo 'root:password' | chpasswd
+
+# Create OpenCog examples directory
+RUN mkdir -p /home/user/opencog-examples
+COPY --chown=user:user ./examples/opencog /home/user/opencog-examples/
+RUN chmod +x /home/user/opencog-examples/opencog-start.sh && \
+    chmod +x /home/user/opencog-examples/verify-installation.sh
+
+# Set up Guile configuration for user
+RUN mkdir -p /home/user/.config/guile/3.0 && \
+    echo "(add-to-load-path \"/usr/local/share/guile/site/3.0\")" > /home/user/.guile && \
+    echo "(use-modules (ice-9 readline))" >> /home/user/.guile && \
+    echo "(activate-readline)" >> /home/user/.guile && \
+    chown -R user:user /home/user
+
+# Add welcome message to bashrc
+RUN echo 'if [ -f ~/opencog-examples/WELCOME.txt ]; then' >> /home/user/.bashrc && \
+    echo '    cat ~/opencog-examples/WELCOME.txt' >> /home/user/.bashrc && \
+    echo 'fi' >> /home/user/.bashrc && \
+    chown user:user /home/user/.bashrc
+
+# Create startup script for cogserver
+RUN echo '#!/bin/bash' > /usr/local/bin/start-cogserver && \
+    echo 'echo "Starting OpenCog CogServer..."' >> /usr/local/bin/start-cogserver && \
+    echo 'echo "Connect via: telnet localhost 17001"' >> /usr/local/bin/start-cogserver && \
+    echo 'echo "Or use rlwrap for history: rlwrap telnet localhost 17001"' >> /usr/local/bin/start-cogserver && \
+    echo 'echo "Then type: scm  (to enter Scheme shell)"' >> /usr/local/bin/start-cogserver && \
+    echo 'echo ""' >> /usr/local/bin/start-cogserver && \
+    echo 'cogserver' >> /usr/local/bin/start-cogserver && \
+    chmod +x /usr/local/bin/start-cogserver
+
+WORKDIR /home/user
+ENV HOME="/home/user" TERM="xterm" USER="user" SHELL="/bin/bash" EDITOR="vim" LANG="en_US.UTF-8" LC_ALL="C"
+
+# Start bash by default (user can run start-cogserver or cogserver directly)
+CMD [ "/bin/bash" ]
