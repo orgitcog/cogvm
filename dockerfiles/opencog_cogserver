@@ -73,6 +73,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 # Install only runtime dependencies
 # Note: libssl3 is required at runtime for WebSockets support
+# Note: libgomp1 is required for OpenMP support used by cogserver
 RUN apt-get clean && apt-get update && \
     apt-get install -y --no-install-recommends \
     libboost-filesystem1.74.0 \
@@ -82,6 +83,7 @@ RUN apt-get clean && apt-get update && \
     libboost-thread1.74.0 \
     guile-3.0 \
     libgmp10 \
+    libgomp1 \
     libssl3 \
     rlwrap \
     telnet \
