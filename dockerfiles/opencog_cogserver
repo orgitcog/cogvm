@@ -22,7 +22,8 @@ RUN apt-get clean && apt-get update && \
 WORKDIR /tmp/build
 
 # Clone and build CogUtil first (required dependency for AtomSpace)
-RUN git clone --depth 1 --branch v2.2.1 https://github.com/opencog/cogutil.git && \
+# Note: Using master branch as there's no v2.2.1 tag in cogutil
+RUN git clone --depth 1 --branch master https://github.com/opencog/cogutil.git && \
     cd cogutil && \
     mkdir build && cd build && \
     cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
