@@ -51,8 +51,11 @@ RUN git clone --depth 1 https://github.com/opencog/atomspace-storage.git && \
     ldconfig
 
 # Clone and build cogserver
+# Note: Remove python directory to avoid CMake error when Python is not installed
+# (cogserver's python/CMakeLists.txt has a bug with missing DESTINATION)
 RUN git clone --depth 1 https://github.com/opencog/cogserver.git && \
     cd cogserver && \
+    rm -rf opencog/cogserver/python && \
     mkdir build && cd build && \
     cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
     make -j$(nproc) && \
