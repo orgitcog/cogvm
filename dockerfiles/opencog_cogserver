@@ -2,6 +2,7 @@ FROM --platform=i386 i386/debian:bookworm AS builder
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install build tools and dependencies
+# Note: libssl-dev is required because cogserver unconditionally links against OpenSSL
 RUN apt-get clean && apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
@@ -17,7 +18,8 @@ RUN apt-get clean && apt-get update && \
     guile-3.0-dev \
     libgmp-dev \
     libtool \
-    libasio-dev && \
+    libasio-dev \
+    libssl-dev && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /tmp/build
@@ -70,6 +72,7 @@ FROM --platform=i386 i386/debian:bookworm
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install only runtime dependencies
+# Note: libssl3 is required at runtime for WebSockets support
 RUN apt-get clean && apt-get update && \
     apt-get install -y --no-install-recommends \
     libboost-filesystem1.74.0 \
@@ -79,6 +82,7 @@ RUN apt-get clean && apt-get update && \
     libboost-thread1.74.0 \
     guile-3.0 \
     libgmp10 \
+    libssl3 \
     rlwrap \
     telnet \
     vim-tiny \
