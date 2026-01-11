@@ -16,7 +16,8 @@ RUN apt-get clean && apt-get update && \
     libboost-thread-dev \
     guile-3.0-dev \
     libgmp-dev \
-    libtool && \
+    libtool \
+    libasio-dev && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /tmp/build
@@ -34,6 +35,15 @@ RUN git clone --depth 1 --branch master https://github.com/opencog/cogutil.git &
 # Clone and build atomspace with minimal features
 RUN git clone --depth 1 https://github.com/opencog/atomspace.git && \
     cd atomspace && \
+    mkdir build && cd build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig
+
+# Clone and build atomspace-storage (required by cogserver for AtomSpaceStorage)
+RUN git clone --depth 1 https://github.com/opencog/atomspace-storage.git && \
+    cd atomspace-storage && \
     mkdir build && cd build && \
     cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
     make -j$(nproc) && \
