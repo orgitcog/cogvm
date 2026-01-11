@@ -94,7 +94,12 @@ RUN apt-get clean && apt-get update && \
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
 COPY --from=builder /usr/local/lib/* /usr/local/lib/
 COPY --from=builder /usr/local/include/ /usr/local/include/
-COPY --from=builder /usr/local/share/guile /usr/local/share/guile
+COPY --from=builder /usr/local/share/cogserver /usr/local/share/cogserver
+
+# Copy OpenCog Guile modules from builder (installed to /usr/share/guile, not /usr/local/share/guile)
+COPY --from=builder /usr/share/guile/site/3.0/opencog /usr/share/guile/site/3.0/opencog
+COPY --from=builder /usr/share/guile/site/3.0/opencog.scm /usr/share/guile/site/3.0/opencog.scm
+COPY --from=builder /usr/lib/i386-linux-gnu/guile/3.0/site-ccache/opencog /usr/lib/i386-linux-gnu/guile/3.0/site-ccache/opencog
 
 # Run ldconfig
 RUN ldconfig
@@ -111,7 +116,7 @@ RUN chmod +x /home/user/opencog-examples/opencog-start.sh && \
 
 # Set up Guile configuration for user
 RUN mkdir -p /home/user/.config/guile/3.0 && \
-    echo "(add-to-load-path \"/usr/local/share/guile/site/3.0\")" > /home/user/.guile && \
+    echo "(add-to-load-path \"/usr/share/guile/site/3.0\")" > /home/user/.guile && \
     echo "(use-modules (ice-9 readline))" >> /home/user/.guile && \
     echo "(activate-readline)" >> /home/user/.guile && \
     chown -R user:user /home/user
